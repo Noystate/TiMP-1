@@ -5,7 +5,6 @@
 #include <vector>
 #include "cipher_error.h"
 
-
 // Класс для реализации шифра табличной маршрутной перестановки
 class TableCipher {
 private:
