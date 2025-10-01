@@ -1,62 +1,44 @@
-#include "modAlphaCipher.h"
+#pragma once
+#include <string>
+#include <stdexcept>
 #include <locale>
-#include <codecvt>
-#include <algorithm>
-#include <cwctype> // Добавлен для std::towupper
+#include <vector>
+#include <map>
 
-modAlphaCipher::modAlphaCipher(const std::wstring& skey)
-{
-    // установка локали
-    std::locale::global(std::locale(""));
-    // заполняем ассоциативный массив
-    for (size_t i = 0; i < numAlpha.size(); i++) { // Исправлено: size_t
-        alphaNum[numAlpha[i]] = i; // сопоставляем символ с его порядковым номером в алфавите
-    }
-    key = convert(skey); // преобразуем строковой ключ в числовой вектор и сохраняем его
-}
+// Класс-исключение для ошибок шифрования
+class cipher_error : public std::invalid_argument {
+public:
+    explicit cipher_error(const std::string& what_arg) : 
+        std::invalid_argument(what_arg) {}
+    explicit cipher_error(const char* what_arg) : 
+        std::invalid_argument(what_arg) {}
+};
 
-// реализация метода шифрования
-std::wstring modAlphaCipher::encrypt(const std::wstring& open_text)
-{
-    std::vector<int> work = convert(open_text);
-    for (size_t i = 0; i < work.size(); i++) { // Исправлено: size_t
-        work[i] = (work[i] + key[i % key.size()]) % alphaNum.size();
-    }
-    return convert(work);
-}
-
-// реализация метода дешифрования
-std::wstring modAlphaCipher::decrypt(const std::wstring& cipher_text)
-{
-    std::vector<int> work = convert(cipher_text);
-    for (size_t i = 0; i < work.size(); i++) { // Исправлено: size_t
-        work[i] = (work[i] + alphaNum.size() - key[i % key.size()]) % alphaNum.size();
-    }
-    return convert(work);
-}
-
-// реализация метода преобразования строки в вектор чисел
-std::vector<int> modAlphaCipher::convert(const std::wstring& s)
-{
-    std::vector<int> result;
-    for (auto c : s) {
-        // Приводим символ к верхнему регистру для единообразия
-        wchar_t upper_c = std::towupper(c); // Исправлено: wchar_t и std::towupper
-        if (alphaNum.find(upper_c) != alphaNum.end()) {
-            result.push_back(alphaNum[upper_c]); // Исправлено: alphaNum
-        }
-    }
-    return result;
-}
-
-// реализация метода преобразования вектора чисел в строку
-std::wstring modAlphaCipher::convert(const std::vector<int>& v)
-{
-    std::wstring result;
-    for (auto i : v) {
-        if (i >= 0 && i < static_cast<int>(numAlpha.size())) {
-            result += numAlpha[i];
-        }
-    }
-    return result;
-}
+// Класс для реализации шифра Гронсфельда
+class modAlphaCipher {
+private:
+    std::string numAlpha = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ "; // Алфавит с пробелом
+    std::map<char, int> alphaNum; // Ассоциативный массив "символ-номер"
+    std::vector<int> key; // Ключ в числовом виде
+    
+    // Методы преобразования
+    std::vector<int> convert(const std::string& s);
+    std::string convert(const std::vector<int>& v);
+    
+    // Методы валидации
+    std::string getValidKey(const std::string& s);
+    std::string getValidOpenText(const std::string& s);
+    std::string getValidCipherText(const std::string& s);
+    
+public:
+    modAlphaCipher() = delete; // Запрет конструктора без параметров
+    
+    // Конструктор с установкой ключа
+    modAlphaCipher(const std::string& skey);
+    
+    // Метод зашифрования
+    std::string encrypt(const std::string& open_text);
+    
+    // Метод расшифрования
+    std::string decrypt(const std::string& cipher_text);
+};
