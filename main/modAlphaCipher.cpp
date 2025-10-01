@@ -1,44 +1,124 @@
-#pragma once
-#include <string>
-#include <stdexcept>
-#include <locale>
-#include <vector>
-#include <map>
+#include "modAlphaCipher.h"
+#include <cctype>
+#include <algorithm>
 
-// Класс-исключение для ошибок шифрования
-class cipher_error : public std::invalid_argument {
-public:
-    explicit cipher_error(const std::string& what_arg) : 
-        std::invalid_argument(what_arg) {}
-    explicit cipher_error(const char* what_arg) : 
-        std::invalid_argument(what_arg) {}
-};
+// Конструктор
+modAlphaCipher::modAlphaCipher(const std::string& skey) {
+    std::setlocale(LC_ALL, "Russian");
+    
+    // Инициализация ассоциативного массива
+    for (unsigned i = 0; i < numAlpha.size(); i++) {
+        alphaNum[numAlpha[i]] = i;
+    }
+    
+    // Валидация и установка ключа
+    key = convert(getValidKey(skey));
+}
 
-// Класс для реализации шифра Гронсфельда
-class modAlphaCipher {
-private:
-    std::string numAlpha = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ "; // Алфавит с пробелом
-    std::map<char, int> alphaNum; // Ассоциативный массив "символ-номер"
-    std::vector<int> key; // Ключ в числовом виде
+// Метод валидации ключа
+std::string modAlphaCipher::getValidKey(const std::string& s) {
+    if (s.empty()) {
+        throw cipher_error("Пустой ключ");
+    }
     
-    // Методы преобразования
-    std::vector<int> convert(const std::string& s);
-    std::string convert(const std::vector<int>& v);
+    std::string tmp;
+    for (auto c : s) {
+        if (numAlpha.find(c) != std::string::npos) {
+            if (std::islower(c)) {
+                tmp.push_back(std::toupper(c));
+            } else {
+                tmp.push_back(c);
+            }
+        }
+    }
     
-    // Методы валидации
-    std::string getValidKey(const std::string& s);
-    std::string getValidOpenText(const std::string& s);
-    std::string getValidCipherText(const std::string& s);
+    if (tmp.empty()) {
+        throw cipher_error("Ключ не содержит допустимых символов");
+    }
     
-public:
-    modAlphaCipher() = delete; // Запрет конструктора без параметров
+    return tmp;
+}
+
+// Метод валидации открытого текста
+std::string modAlphaCipher::getValidOpenText(const std::string& s) {
+    if (s.empty()) {
+        throw cipher_error("Пустой открытый текст");
+    }
     
-    // Конструктор с установкой ключа
-    modAlphaCipher(const std::string& skey);
+    std::string tmp;
+    for (auto c : s) {
+        if (numAlpha.find(c) != std::string::npos) {
+            if (std::islower(c)) {
+                tmp.push_back(std::toupper(c));
+            } else {
+                tmp.push_back(c);
+            }
+        } else {
+            // Игнорируем недопустимые символы
+            continue;
+        }
+    }
     
-    // Метод зашифрования
-    std::string encrypt(const std::string& open_text);
+    if (tmp.empty()) {
+        throw cipher_error("Текст не содержит допустимых символов");
+    }
     
-    // Метод расшифрования
-    std::string decrypt(const std::string& cipher_text);
-};
+    return tmp;
+}
+
+// Метод валидации зашифрованного текста
+std::string modAlphaCipher::getValidCipherText(const std::string& s) {
+    if (s.empty()) {
+        throw cipher_error("Пустой зашифрованный текст");
+    }
+    
+    for (auto c : s) {
+        if (numAlpha.find(c) == std::string::npos) {
+            throw cipher_error("Зашифрованный текст содержит недопустимые символы");
+        }
+    }
+    
+    return s;
+}
+
+// Преобразование строки в числовой вектор
+std::vector<int> modAlphaCipher::convert(const std::string& s) {
+    std::vector<int> result;
+    for (auto c : s) {
+        result.push_back(alphaNum[c]);
+    }
+    return result;
+}
+
+// Преобразование числового вектора в строку
+std::string modAlphaCipher::convert(const std::vector<int>& v) {
+    std::string result;
+    for (auto i : v) {
+        result.push_back(numAlpha[i]);
+    }
+    return result;
+}
+
+// Метод зашифрования
+std::string modAlphaCipher::encrypt(const std::string& open_text) {
+    std::string validText = getValidOpenText(open_text);
+    std::vector<int> work = convert(validText);
+    
+    for (unsigned i = 0; i < work.size(); i++) {
+        work[i] = (work[i] + key[i % key.size()]) % numAlpha.size();
+    }
+    
+    return convert(work);
+}
+
+// Метод расшифрования
+std::string modAlphaCipher::decrypt(const std::string& cipher_text) {
+    std::string validText = getValidCipherText(cipher_text);
+    std::vector<int> work = convert(validText);
+    
+    for (unsigned i = 0; i < work.size(); i++) {
+        work[i] = (work[i] + numAlpha.size() - key[i % key.size()]) % numAlpha.size();
+    }
+    
+    return convert(work);
+}
