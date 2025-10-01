@@ -4,7 +4,7 @@
 
 // Валидация ключа
 std::string TableCipher::getValidKey(const std::string& s) {
-    std::setlocale(LC_ALL, "Russian");
+    std::setlocale(LC_ALL, "ru_RU.UTF-8");
     
     if (s.empty()) {
         throw cipher_error("Пустой ключ");
@@ -26,7 +26,7 @@ std::string TableCipher::getValidKey(const std::string& s) {
 
 // Валидация текста
 std::string TableCipher::getValidText(const std::string& s) {
-    std::setlocale(LC_ALL, "Russian");
+    std::setlocale(LC_ALL, "ru_RU.UTF-8");
     
     if (s.empty()) {
         throw cipher_error("Пустой текст");
@@ -52,7 +52,8 @@ std::string TableCipher::getValidText(const std::string& s) {
 
 // Конструктор
 TableCipher::TableCipher(const std::string& skey) {
-    std::setlocale(LC_ALL, "Russian");
+    std::setlocale(LC_ALL, "ru_RU.UTF-8");
+    std::locale::global(std::locale("ru_RU.UTF-8"));
     
     std::string validKey = getValidKey(skey);
     
@@ -73,7 +74,7 @@ TableCipher::TableCipher(const std::string& skey) {
 
 // Шифрование
 std::string TableCipher::encrypt(const std::string& open_text) {
-    std::setlocale(LC_ALL, "Russian");
+    std::setlocale(LC_ALL, "ru_RU.UTF-8");
     
     std::string validText = getValidText(open_text);
     unsigned rows = (validText.length() + key - 1) / key;
@@ -99,13 +100,13 @@ std::string TableCipher::encrypt(const std::string& open_text) {
 
 // Расшифрование
 std::string TableCipher::decrypt(const std::string& cipher_text) {
-    std::setlocale(LC_ALL, "Russian");
+    std::setlocale(LC_ALL, "ru_RU.UTF-8");
     
     std::string validText = getValidText(cipher_text);
     unsigned rows = (validText.length() + key - 1) / key;
     
     if (rows == 0) {
-        throw cipher_error("Невозможно создать таблицу");
+        throw cipher_error("Невозможно создать таблицу для расшифрования");
     }
     
     // Заполнение таблицы по столбцам справа налево
