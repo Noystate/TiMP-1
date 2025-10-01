@@ -3,15 +3,8 @@
 #include <stdexcept>
 #include <locale>
 #include <vector>
+#include "cipher_error.h"
 
-// Класс-исключение для ошибок шифрования
-class cipher_error : public std::invalid_argument {
-public:
-    explicit cipher_error(const std::string& what_arg) : 
-        std::invalid_argument(what_arg) {}
-    explicit cipher_error(const char* what_arg) : 
-        std::invalid_argument(what_arg) {}
-};
 
 // Класс для реализации шифра табличной маршрутной перестановки
 class TableCipher {
