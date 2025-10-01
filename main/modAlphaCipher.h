@@ -1,22 +1,44 @@
 #pragma once
-#include <map>
 #include <string>
-#include <vector>
 #include <stdexcept>
+#include <locale>
+#include <vector>
+#include <map>
 
-// Класс для реализации шифра табличной маршрутной перестановки
-class modAlphaCipher
-{
-private:
-    std::wstring numAlpha = L"АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"; // Локализация (исправлено: Щ вместо Ц, Ъ вместо Ы)
-    std::map<wchar_t, int> alphaNum; // Ассоциативный массив: символ - его порядковый номер в алфавите (исправлено: <wchar_t, int>)
-    std::vector<int> key; // Вектор ключ для шифрования/дешифрования
-    std::vector<int> convert(const std::wstring& s); // Преобразование строки в вектор чисел
-    std::wstring convert(const std::vector<int>& v); // Преобразование вектора чисел в строку
-
+// Класс-исключение для ошибок шифрования
+class cipher_error : public std::invalid_argument {
 public:
-    modAlphaCipher() = delete; // Удаление конструктора по умолчанию
-    modAlphaCipher(const std::wstring& skey); // конструктор с параметром (исправлено: skey вместо skew)
-    std::wstring encrypt(const std::wstring& open_text); // Метод для шифрования текста
-    std::wstring decrypt(const std::wstring& cipher_text); // Метод для дешифрования текста
+    explicit cipher_error(const std::string& what_arg) : 
+        std::invalid_argument(what_arg) {}
+    explicit cipher_error(const char* what_arg) : 
+        std::invalid_argument(what_arg) {}
+};
+
+// Класс для реализации шифра Гронсфельда
+class modAlphaCipher {
+private:
+    std::string numAlpha = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ "; // Алфавит с пробелом
+    std::map<char, int> alphaNum; // Ассоциативный массив "символ-номер"
+    std::vector<int> key; // Ключ в числовом виде
+    
+    // Методы преобразования
+    std::vector<int> convert(const std::string& s);
+    std::string convert(const std::vector<int>& v);
+    
+    // Методы валидации
+    std::string getValidKey(const std::string& s);
+    std::string getValidOpenText(const std::string& s);
+    std::string getValidCipherText(const std::string& s);
+    
+public:
+    modAlphaCipher() = delete; // Запрет конструктора без параметров
+    
+    // Конструктор с установкой ключа
+    modAlphaCipher(const std::string& skey);
+    
+    // Метод зашифрования
+    std::string encrypt(const std::string& open_text);
+    
+    // Метод расшифрования
+    std::string decrypt(const std::string& cipher_text);
 };
