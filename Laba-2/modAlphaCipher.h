@@ -17,7 +17,7 @@ public:
 class modAlphaCipher
 {
 private:
-    std::wstring numAlpha = L"АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
+    std::wstring numAlpha = L"АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ ";
     std::map<wchar_t, int> alphaNum;
     std::vector<int> key;
     std::locale loc;
@@ -29,6 +29,7 @@ private:
     std::wstring convert(const std::vector<int>& v);
     bool isRussianLetter(wchar_t c);
     bool isRussianUpperCase(wchar_t c);
+    bool isSpace(wchar_t c);
     
 public:
     modAlphaCipher() = delete;

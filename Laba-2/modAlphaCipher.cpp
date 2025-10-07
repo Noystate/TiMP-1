@@ -6,6 +6,7 @@
 modAlphaCipher::modAlphaCipher(const std::wstring& skey) : loc("ru_RU.UTF-8")
 {
     // Инициализация алфавита и ассоциативного массива
+    // Теперь алфавит включает пробел как последний символ (индекс 33)
     for (unsigned i = 0; i < numAlpha.size(); i++) {
         alphaNum[numAlpha[i]] = i;
     }
@@ -24,6 +25,11 @@ bool modAlphaCipher::isRussianUpperCase(wchar_t c) {
     return (c >= L'А' && c <= L'Я') || c == L'Ё';
 }
 
+// Проверка на пробел
+bool modAlphaCipher::isSpace(wchar_t c) {
+    return c == L' ';
+}
+
 // Валидация ключа
 std::wstring modAlphaCipher::getValidKey(const std::wstring& s)
 {
@@ -31,18 +37,26 @@ std::wstring modAlphaCipher::getValidKey(const std::wstring& s)
         throw cipher_error("Пустой ключ");
     }
     
-    std::wstring tmp(s);
-    for (auto& c : tmp) {
-        if (!isRussianLetter(c)) {
+    std::wstring tmp;
+    for (auto c : s) {
+        if (isRussianLetter(c) || isSpace(c)) {
+            // Приводим к верхнему регистру
+            if (c >= L'а' && c <= L'я') {
+                tmp.push_back(c - L'а' + L'А');
+            } else if (c == L'ё') {
+                tmp.push_back(L'Ё');
+            } else {
+                tmp.push_back(c);
+            }
+        } else {
             throw cipher_error("Ключ содержит недопустимые символы");
         }
-        // Приводим к верхнему регистру
-        if (c >= L'а' && c <= L'я') {
-            c = c - L'а' + L'А';
-        } else if (c == L'ё') {
-            c = L'Ё';
-        }
     }
+    
+    if (tmp.empty()) {
+        throw cipher_error("Пустой ключ после валидации");
+    }
+    
     return tmp;
 }
 
@@ -51,7 +65,7 @@ std::wstring modAlphaCipher::getValidOpenText(const std::wstring& s)
 {
     std::wstring tmp;
     for (auto c : s) {
-        if (isRussianLetter(c)) {
+        if (isRussianLetter(c) || isSpace(c)) {
             // Приводим к верхнему регистру
             if (c >= L'а' && c <= L'я') {
                 tmp.push_back(c - L'а' + L'А');
@@ -61,7 +75,7 @@ std::wstring modAlphaCipher::getValidOpenText(const std::wstring& s)
                 tmp.push_back(c);
             }
         }
-        // Игнорируем не-буквы
+        // Игнорируем другие символы (цифры, знаки препинания и т.д.)
     }
     
     if (tmp.empty()) {
@@ -78,8 +92,12 @@ std::wstring modAlphaCipher::getValidCipherText(const std::wstring& s)
     }
     
     for (auto c : s) {
-        if (!isRussianLetter(c) || !isRussianUpperCase(c)) {
+        if (!isRussianLetter(c) && !isSpace(c)) {
             throw cipher_error("Зашифрованный текст содержит недопустимые символы");
+        }
+        // Для зашифрованного текста требуем верхний регистр
+        if (isRussianLetter(c) && !isRussianUpperCase(c)) {
+            throw cipher_error("Зашифрованный текст должен быть в верхнем регистре");
         }
     }
     return s;
@@ -116,7 +134,13 @@ std::wstring modAlphaCipher::encrypt(const std::wstring& open_text)
     std::vector<int> work = convert(valid_text);
     
     for (unsigned i = 0; i < work.size(); i++) {
-        work[i] = (work[i] + key[i % key.size()]) % numAlpha.size();
+        // Для пробела (индекс 33) применяем особую логику
+        if (work[i] == 33) { // пробел
+            // Пробел остается пробелом при шифровании
+            continue;
+        } else {
+            work[i] = (work[i] + key[i % key.size()]) % (numAlpha.size() - 1); // -1 потому что пробел не участвует в сдвиге
+        }
     }
     
     return convert(work);
@@ -129,7 +153,13 @@ std::wstring modAlphaCipher::decrypt(const std::wstring& cipher_text)
     std::vector<int> work = convert(valid_text);
     
     for (unsigned i = 0; i < work.size(); i++) {
-        work[i] = (work[i] + numAlpha.size() - key[i % key.size()]) % numAlpha.size();
+        // Для пробела (индекс 33) применяем особую логику
+        if (work[i] == 33) { // пробел
+            // Пробел остается пробелом при дешифровании
+            continue;
+        } else {
+            work[i] = (work[i] + (numAlpha.size() - 1) - key[i % key.size()]) % (numAlpha.size() - 1);
+        }
     }
     
     return convert(work);
