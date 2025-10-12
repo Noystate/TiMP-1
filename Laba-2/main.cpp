@@ -24,7 +24,7 @@ void showMenu() {
     std::wcout << L"2 - Расшифровать текст" << std::endl;
     std::wcout << L"3 - Показать пример работы с пробелами" << std::endl;
     std::wcout << L"4 - Информация о шифре" << std::endl;
-    std::wcout << L"5 - Тестирование исключений" << std::endl;
+  //std::wcout << L"5 - Тестирование исключений" << std::endl;
     std::wcout << L"0 - Выход" << std::endl;
     std::wcout << L"═══════════════════════════════════════════════" << std::endl;
     std::wcout << L"Выберите действие: ";
