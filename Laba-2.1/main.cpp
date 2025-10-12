@@ -94,7 +94,7 @@ int main() {
                 break;
             }
             
-/*            case 3: { // Примеры
+           case 3: { // Примеры
                 std::wcout << L"\n--- ПРИМЕРЫ РАБОТЫ ---" << std::endl;
                 try {
                     std::wstring encrypted1 = cipher->encrypt(L"ПРИВЕТ");
@@ -117,7 +117,7 @@ int main() {
                 }
                 break;
             }
-            */
+            
             case 4: { // Смена ключа
                 std::string newKey;
                 std::wcout << L"\n--- СМЕНА КЛЮЧА ---" << std::endl;
