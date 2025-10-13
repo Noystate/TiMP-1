@@ -1,166 +1,189 @@
 #include <iostream>
 #include <string>
 #include <locale>
-#include <codecvt>
 #include "routeCipher.h"
 
-// Функции для конвертации между string и wstring
-std::wstring string_to_wstring(const std::string& str) {
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-    return converter.from_bytes(str);
-}
+using namespace std;
 
-std::string wstring_to_string(const std::wstring& wstr) {
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-    return converter.to_bytes(wstr);
-}
-
-// Установка русской локали
+// Установка локали для русского вывода меню
 void setRussianLocale() {
+    setlocale(LC_ALL, "");
+}
+
+// Отображение меню на русском
+void showMenu() {
+    cout << "\n=== TABLE ROUTE TRANSPOSITION CIPHER ===" << endl;
+    cout << "=== ШИФР ТАБЛИЧНОЙ МАРШРУТНОЙ ПЕРЕСТАНОВКИ ===" << endl;
+    cout << "1. Зашифровать текст" << endl;
+    cout << "2. Расшифровать текст" << endl;
+    cout << "3. Показать примеры" << endl;
+    cout << "4. Сменить ключ" << endl;
+    cout << "0. Выход" << endl;
+    cout << "Выберите действие: ";
+}
+
+// Функция для демонстрации примеров
+void showExamples(RouteCipher& cipher) {
+    cout << "\n--- WORK EXAMPLES ---" << endl;
+    cout << "--- ПРИМЕРЫ РАБОТЫ ---" << endl;
+    
+    // Пример 1
+    cout << "Пример 1: 'HELLO'" << endl;
     try {
-        std::locale::global(std::locale("ru_RU.UTF-8"));
-        std::wcout.imbue(std::locale());
-        std::wcin.imbue(std::locale());
-    } catch (const std::exception& e) {
-        std::cout << "Не удалось установить локаль, используется по умолчанию" << std::endl;
+        string encrypted1 = cipher.encrypt("HELLO");
+        string decrypted1 = cipher.decrypt(encrypted1);
+        cout << "Зашифровано: " << encrypted1 << endl;
+        cout << "Расшифровано: " << decrypted1 << endl;
+        cout << "✔ Корректность: " << ("HELLO" == decrypted1 ? "ДА" : "НЕТ") << endl;
+    } catch (const exception& e) {
+        cout << "❌ Ошибка: " << e.what() << endl;
+    }
+    
+    // Пример 2
+    cout << "\nПример 2: 'HELLO WORLD'" << endl;
+    try {
+        string encrypted2 = cipher.encrypt("HELLO WORLD");
+        string decrypted2 = cipher.decrypt(encrypted2);
+        cout << "Зашифровано: " << encrypted2 << endl;
+        cout << "Расшифровано: " << decrypted2 << endl;
+        cout << "✔ Корректность: " << ("HELLO WORLD" == decrypted2 ? "ДА" : "НЕТ") << endl;
+    } catch (const exception& e) {
+        cout << "❌ Ошибка: " << e.what() << endl;
+    }
+    
+    // Пример 3 - тест ошибки с пустым ключом
+    cout << "\nПример 3: Тест ошибки - пустой текст" << endl;
+    try {
+        string encrypted3 = cipher.encrypt("");
+        cout << "Зашифровано: " << encrypted3 << endl;
+    } catch (const exception& e) {
+        cout << "❌ Ошибка: " << e.what() << endl;
+    }
+    
+    // Пример 4 - тест ошибки с недопустимыми символами
+    cout << "\nПример 4: Тест ошибки - недопустимые символы" << endl;
+    try {
+        string encrypted4 = cipher.encrypt("HELLO123");
+        string decrypted4 = cipher.decrypt("HELLO@#$"); // Недопустимые символы
+        cout << "Зашифровано: " << encrypted4 << endl;
+    } catch (const exception& e) {
+        cout << "❌ Ошибка: " << e.what() << endl;
     }
 }
 
-// Отображение меню
-void showMenu() {
-    std::wcout << L"\n=== ШИФР МАРШРУТНОЙ ПЕРЕСТАНОВКИ ===" << std::endl;
-    std::wcout << L"1. Зашифровать текст" << std::endl;
-    std::wcout << L"2. Расшифровать текст" << std::endl;
-    std::wcout << L"3. Показать примеры" << std::endl;
-    std::wcout << L"4. Сменить ключ" << std::endl;
-    std::wcout << L"0. Выход" << std::endl;
-    std::wcout << L"Выберите действие: ";
-}
-
-// Основная функция программы
 int main() {
     setRussianLocale();
     
-    std::wcout << L"=== ШИФР МАРШРУТНОЙ ПЕРЕСТАНОВКИ ===" << std::endl;
-    std::wcout << L"• Поддержка русского языка" << std::endl;
-    std::wcout << L"• Буквы Ё и пробелы" << std::endl;
+    cout << "=== TABLE ROUTE TRANSPOSITION CIPHER ===" << endl;
+    cout << "=== ШИФР ТАБЛИЧНОЙ МАРШРУТНОЙ ПЕРЕСТАНОВКИ ===" << endl;
+    cout << "• English language only • Spaces supported" << endl;
+    cout << "• Только английский язык • Поддержка пробелов" << endl;
+    cout << "• Write route: left to right, top to bottom" << endl;
+    cout << "• Read route: top to bottom, right to left" << endl;
+    cout << "• Маршрут записи: слева направо, сверху вниз" << endl;
+    cout << "• Маршрут считывания: сверху вниз, справа налево" << endl;
     
     // Создаем шифратор с ключом по умолчанию
-    RouteCipher* cipher = nullptr;
-    try {
-        cipher = new RouteCipher("3");
-        std::wcout << L"✅ Ключ установлен: 3 столбца" << std::endl;
-    } catch (const cipher_error& e) {
-        std::wcout << L"❌ Ошибка: " << e.what() << std::endl;
-        return 1;
-    }
+    RouteCipher cipher("3");
+    cout << "Ключ по умолчанию: 3 столбца" << endl;
+    cout << "Default key: 3 columns" << endl;
     
     int choice;
+    string input;
+    
     do {
         showMenu();
-        std::wcin >> choice;
-        std::wcin.ignore(); // Очищаем буфер
+        cin >> choice;
+        cin.ignore();
         
         switch (choice) {
-            case 1: { // Шифрование
-                std::wstring text;
-                std::wcout << L"\n--- ШИФРОВАНИЕ ---" << std::endl;
-                std::wcout << L"Текущий ключ: " << cipher->getKey() << L" столбцов" << std::endl;
-                std::wcout << L"Введите текст: ";
-                std::getline(std::wcin, text);
+            case 1: {
+                cout << "\n--- ENCRYPTION ---" << endl;
+                cout << "--- ШИФРОВАНИЕ ---" << endl;
+                cout << "Текущий ключ: " << cipher.getKey() << " столбцов" << endl;
+                cout << "Current key: " << cipher.getKey() << " columns" << endl;
+                cout << "Введите текст: ";
+                getline(cin, input);
                 
                 try {
-                    std::wstring encrypted = cipher->encrypt(text);
-                    std::wcout << L"✅ Зашифрованный текст: " << encrypted << std::endl;
-                } catch (const cipher_error& e) {
-                    std::wcout << L"❌ Ошибка: " << e.what() << std::endl;
+                    string encrypted = cipher.encrypt(input);
+                    cout << "✅ Зашифрованный текст: " << encrypted << endl;
+                    cout << "✅ Encrypted text: " << encrypted << endl;
+                } catch (const exception& e) {
+                    cout << "❌ Ошибка шифрования: " << e.what() << endl;
+                    cout << "❌ Encryption error: " << e.what() << endl;
+                    cout << "Подсказка: используйте только английские буквы и пробелы" << endl;
+                    cout << "Hint: use only English letters and spaces" << endl;
                 }
                 break;
             }
             
-            case 2: { // Дешифрование
-                std::wstring text;
-                std::wcout << L"\n--- ДЕШИФРОВАНИЕ ---" << std::endl;
-                std::wcout << L"Текущий ключ: " << cipher->getKey() << L" столбцов" << std::endl;
-                std::wcout << L"Введите текст: ";
-                std::getline(std::wcin, text);
+            case 2: {
+                cout << "\n--- DECRYPTION ---" << endl;
+                cout << "--- ДЕШИФРОВАНИЕ ---" << endl;
+                cout << "Текущий ключ: " << cipher.getKey() << " столбцов" << endl;
+                cout << "Current key: " << cipher.getKey() << " columns" << endl;
+                cout << "Введите текст: ";
+                getline(cin, input);
                 
                 try {
-                    std::wstring decrypted = cipher->decrypt(text);
-                    std::wcout << L"✅ Расшифрованный текст: " << decrypted << std::endl;
-                } catch (const cipher_error& e) {
-                    std::wcout << L"❌ Ошибка: " << e.what() << std::endl;
+                    string decrypted = cipher.decrypt(input);
+                    cout << "✅ Расшифрованный текст: " << decrypted << endl;
+                    cout << "✅ Decrypted text: " << decrypted << endl;
+                } catch (const exception& e) {
+                    cout << "❌ Ошибка дешифрования: " << e.what() << endl;
+                    cout << "❌ Decryption error: " << e.what() << endl;
                 }
                 break;
             }
             
-           case 3: { // Примеры
-                std::wcout << L"\n--- ПРИМЕРЫ РАБОТЫ ---" << std::endl;
+            case 3: {
+                showExamples(cipher);
+                break;
+            }
+            
+            case 4: {
+                cout << "\n--- CHANGE KEY ---" << endl;
+                cout << "--- СМЕНА КЛЮЧА ---" << endl;
+                cout << "Текущий ключ: " << cipher.getKey() << " столбцов" << endl;
+                cout << "Current key: " << cipher.getKey() << " columns" << endl;
+                cout << "Введите новый ключ: ";
+                string newKeyStr;
+                getline(cin, newKeyStr);
+                
                 try {
-                    std::wstring encrypted1 = cipher->encrypt(L"ПРИВЕТ");
-                    std::wstring decrypted1 = cipher->decrypt(encrypted1);
-                    
-                    std::wcout << L"Пример 1: 'ПРИВЕТ'" << std::endl;
-                    std::wcout << L"Зашифровано: " << encrypted1 << std::endl;
-                    std::wcout << L"Расшифровано: " << decrypted1 << std::endl;
-                    std::wcout << L"✅ Корректность: " << (L"ПРИВЕТ" == decrypted1 ? L"ДА" : L"НЕТ") << std::endl;
-                    
-                    std::wcout << L"\nПример 2: 'ЁЛКА ЁЖИК'" << std::endl;
-                    std::wstring encrypted2 = cipher->encrypt(L"ЁЛКА ЁЖИК");
-                    std::wstring decrypted2 = cipher->decrypt(encrypted2);
-                    std::wcout << L"Зашифровано: " << encrypted2 << std::endl;
-                    std::wcout << L"Расшифровано: " << decrypted2 << std::endl;
-                    std::wcout << L"✅ Корректность: " << (L"ЁЛКА ЁЖИК" == decrypted2 ? L"ДА" : L"НЕТ") << std::endl;
-                    
-                } catch (const cipher_error& e) {
-                    std::wcout << L"❌ Ошибка: " << e.what() << std::endl;
+                    // Создаем временный шифратор для валидации ключа
+                    RouteCipher tempCipher(newKeyStr);
+                    cipher.setKey(tempCipher.getKey());
+                    cout << "✅ Новый ключ установлен: " << cipher.getKey() << " столбцов" << endl;
+                    cout << "✅ New key set: " << cipher.getKey() << " columns" << endl;
+                } catch (const exception& e) {
+                    cout << "❌ Ошибка: " << e.what() << endl;
+                    cout << "❌ Error: " << e.what() << endl;
                 }
                 break;
             }
             
-            case 4: { // Смена ключа
-                std::string newKey;
-                std::wcout << L"\n--- СМЕНА КЛЮЧА ---" << std::endl;
-                std::wcout << L"Текущий ключ: " << cipher->getKey() << L" столбцов" << std::endl;
-                std::wcout << L"Введите новый ключ (число): ";
-                std::string temp;
-                std::getline(std::cin, temp);
-                newKey = temp;
-                
-                try {
-                    delete cipher;
-                    cipher = new RouteCipher(newKey);
-                    std::wcout << L"✅ Новый ключ установлен: " << cipher->getKey() << L" столбцов" << std::endl;
-                } catch (const cipher_error& e) {
-                    std::wcout << L"❌ Ошибка: " << e.what() << std::endl;
-                    // Восстанавливаем старый ключ при ошибке
-                    try {
-                        cipher = new RouteCipher("3");
-                    } catch (...) {
-                        std::wcout << L"Критическая ошибка!" << std::endl;
-                        return 1;
-                    }
-                }
+            case 0: {
+                cout << "\nВыход из программы..." << endl;
+                cout << "Exiting program..." << endl;
                 break;
             }
             
-            case 0: // Выход
-                std::wcout << L"\nДо свидания!" << std::endl;
+            default: {
+                cout << "❌ Неверный выбор!" << endl;
+                cout << "❌ Invalid choice!" << endl;
                 break;
-                
-            default:
-                std::wcout << L"❌ Неверный выбор!" << std::endl;
+            }
         }
         
         if (choice != 0) {
-            std::wcout << L"\nНажмите Enter для продолжения...";
-            std::wcin.get();
+            cout << "\nНажмите Enter для продолжения..." << endl;
+            cout << "Press Enter to continue..." << endl;
+            cin.get();
         }
         
     } while (choice != 0);
-    
-    // Освобождаем память
-    delete cipher;
     
     return 0;
 }

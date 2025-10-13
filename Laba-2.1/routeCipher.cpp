@@ -3,88 +3,110 @@
 #include <cctype>
 #include <iostream>
 
+using namespace std;
+
 // Конструктор
-RouteCipher::RouteCipher(const std::string& k) {
-    std::string valid_key = getValidKey(k);
-    key = std::stoi(valid_key);
+RouteCipher::RouteCipher(const std::string& k) : numAlpha("ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
+    initializeAlphaNum();
+    string valid_key = getValidKey(k);
+    key = stoi(valid_key);
+}
+
+// Инициализация ассоциативного массива
+void RouteCipher::initializeAlphaNum() {
+    for (size_t i = 0; i < numAlpha.size(); i++) {
+        alphaNum[numAlpha[i]] = i;
+    }
+}
+
+// Проверка на английскую букву
+bool RouteCipher::isEnglishLetter(char c) {
+    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+}
+
+// Преобразование в верхний регистр
+char RouteCipher::toUpperEnglish(char c) {
+    if (c >= 'a' && c <= 'z') {
+        return c - 32;
+    }
+    return c;
 }
 
 // Валидация ключа
-std::string RouteCipher::getValidKey(const std::string& s) {
+string RouteCipher::getValidKey(const std::string& s) {
     if (s.empty()) {
         throw cipher_error("Пустой ключ");
     }
     
+    // Проверяем что все символы - цифры
     for (char c : s) {
-        if (!std::isdigit(c)) {
-            throw cipher_error("Ключ должен быть положительным числом");
+        if (!isdigit(c)) {
+            throw cipher_error("Ключ должен быть положительным числом: " + s);
         }
     }
     
-    int k = std::stoi(s);
+    int k = stoi(s);
     if (k <= 0) {
-        throw cipher_error("Ключ должен быть положительным числом");
+        throw cipher_error("Ключ должен быть положительным числом: " + s);
     }
     
     return s;
 }
 
-// Проверка на русскую букву
-bool RouteCipher::isRussianLetter(wchar_t c) {
-    return (c >= L'А' && c <= L'Я') || 
-           (c >= L'а' && c <= L'я') || 
-           c == L'Ё' || c == L'ё';
-}
-
-// Преобразование в верхний регистр для русских букв
-wchar_t RouteCipher::toUpperRussian(wchar_t c) {
-    if (c >= L'а' && c <= L'я') {
-        return c - L'а' + L'А';
-    } else if (c == L'ё') {
-        return L'Ё';
-    }
-    return c;
-}
-
-// Валидация текста
-std::wstring RouteCipher::getValidText(const std::wstring& s) {
+// Валидация открытого текста
+string RouteCipher::getValidOpenText(const std::string& s) {
     if (s.empty()) {
-        throw cipher_error("Пустой текст");
+        throw cipher_error("Пустой открытый текст");
     }
     
-    std::wstring result;
-    for (wchar_t c : s) {
-        if (isRussianLetter(c) || c == L' ') {
-            if (isRussianLetter(c)) {
-                result.push_back(toUpperRussian(c));
+    string result;
+    bool hasEnglishLetters = false;
+    
+    for (char c : s) {
+        if (isEnglishLetter(c) || c == ' ') {
+            if (isEnglishLetter(c)) {
+                result += toUpperEnglish(c);
             } else {
-                result.push_back(c); // Пробелы сохраняем
+                result += c;
             }
+            hasEnglishLetters = true;
         }
-        // Не-буквенные символы (кроме пробелов) игнорируются
     }
     
-    if (result.empty()) {
-        throw cipher_error("Текст не содержит русских букв или пробелов");
+    if (!hasEnglishLetters) {
+        throw cipher_error("Текст не содержит английских букв");
     }
     
     return result;
 }
 
+// Валидация зашифрованного текста
+string RouteCipher::getValidCipherText(const std::string& s) {
+    if (s.empty()) {
+        throw cipher_error("Пустой зашифрованный текст");
+    }
+    
+    for (char c : s) {
+        if (!isEnglishLetter(c) && c != ' ') {
+            throw cipher_error("Зашифрованный текст содержит недопустимые символы");
+        }
+    }
+    
+    return s;
+}
+
 // Создание таблицы
-std::vector<std::vector<wchar_t>> RouteCipher::createTable(const std::wstring& text) {
-    std::wstring valid_text = getValidText(text);
-    int text_length = valid_text.length();
+vector<vector<char>> RouteCipher::createTable(const std::string& text) {
+    string valid_text = getValidOpenText(text);
+    int length = valid_text.length();
+    int rows = (length + key - 1) / key;
     
-    int rows = (text_length + key - 1) / key;
-    int cols = key;
-    
-    std::vector<std::vector<wchar_t>> table(rows, std::vector<wchar_t>(cols, L' '));
+    vector<vector<char>> table(rows, vector<char>(key, ' '));
     
     int index = 0;
     for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
-            if (index < text_length) {
+        for (int j = 0; j < key; j++) {
+            if (index < length) {
                 table[i][j] = valid_text[index++];
             }
         }
@@ -94,16 +116,14 @@ std::vector<std::vector<wchar_t>> RouteCipher::createTable(const std::wstring& t
 }
 
 // Чтение таблицы для шифрования (сверху вниз, справа налево)
-std::wstring RouteCipher::readTableEncrypt(const std::vector<std::vector<wchar_t>>& table) {
-    std::wstring result;
+string RouteCipher::readTableEncrypt(const std::vector<std::vector<char>>& table) {
+    string result;
     int rows = table.size();
     int cols = table[0].size();
     
     for (int j = cols - 1; j >= 0; j--) {
         for (int i = 0; i < rows; i++) {
-            if (table[i][j] != L' ') {
-                result.push_back(table[i][j]);
-            }
+            result += table[i][j];
         }
     }
     
@@ -111,16 +131,14 @@ std::wstring RouteCipher::readTableEncrypt(const std::vector<std::vector<wchar_t
 }
 
 // Чтение таблицы для дешифрования (по строкам слева направо)
-std::wstring RouteCipher::readTableDecrypt(const std::vector<std::vector<wchar_t>>& table) {
-    std::wstring result;
+string RouteCipher::readTableDecrypt(const std::vector<std::vector<char>>& table) {
+    string result;
     int rows = table.size();
     int cols = table[0].size();
     
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
-            if (table[i][j] != L' ') {
-                result.push_back(table[i][j]);
-            }
+            result += table[i][j];
         }
     }
     
@@ -128,26 +146,24 @@ std::wstring RouteCipher::readTableDecrypt(const std::vector<std::vector<wchar_t
 }
 
 // Шифрование
-std::wstring RouteCipher::encrypt(const std::wstring& text) {
+string RouteCipher::encrypt(const std::string& text) {
     auto table = createTable(text);
     return readTableEncrypt(table);
 }
 
 // Дешифрование
-std::wstring RouteCipher::decrypt(const std::wstring& text) {
-    std::wstring valid_text = getValidText(text);
-    int text_length = valid_text.length();
+string RouteCipher::decrypt(const std::string& text) {
+    string valid_text = getValidCipherText(text);
+    int length = valid_text.length();
+    int rows = (length + key - 1) / key;
     
-    int rows = (text_length + key - 1) / key;
-    int cols = key;
+    vector<vector<char>> table(rows, vector<char>(key, ' '));
     
-    std::vector<std::vector<wchar_t>> table(rows, std::vector<wchar_t>(cols, L' '));
-    
-    int index = 0;
     // Заполнение таблицы из зашифрованного текста
-    for (int j = cols - 1; j >= 0; j--) {
+    int index = 0;
+    for (int j = key - 1; j >= 0; j--) {
         for (int i = 0; i < rows; i++) {
-            if (index < text_length) {
+            if (index < length) {
                 table[i][j] = valid_text[index++];
             }
         }
