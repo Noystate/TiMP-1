@@ -1,173 +1,104 @@
 #include "routeCipher.h"
-#include <algorithm>
-#include <cctype>
+#include <vector>
 #include <iostream>
+#include <stdexcept>
 
 using namespace std;
 
-// Конструктор
-RouteCipher::RouteCipher(const std::string& k) : numAlpha("ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
-    initializeAlphaNum();
-    string valid_key = getValidKey(k);
-    key = stoi(valid_key);
-}
-
-// Инициализация ассоциативного массива
-void RouteCipher::initializeAlphaNum() {
-    for (size_t i = 0; i < numAlpha.size(); i++) {
-        alphaNum[numAlpha[i]] = i;
+TableRouteCipher::TableRouteCipher(int skey) { 
+    if (skey <= 0) {
+        throw invalid_argument("Ключ должен быть положительным числом");
     }
-}
-
-// Проверка на английскую букву
-bool RouteCipher::isEnglishLetter(char c) {
-    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
-}
-
-// Преобразование в верхний регистр
-char RouteCipher::toUpperEnglish(char c) {
-    if (c >= 'a' && c <= 'z') {
-        return c - 32;
+    if (skey == 1) {
+        throw invalid_argument("Ключ не может быть равен 1");
     }
-    return c;
+    key = skey; 
 }
 
-// Валидация ключа
-string RouteCipher::getValidKey(const std::string& s) {
-    if (s.empty()) {
-        throw cipher_error("Пустой ключ");
+string TableRouteCipher::encrypt(string& text) {
+    if (text.empty()) {
+        throw invalid_argument("Текст не может быть пустым");
     }
     
-    // Проверяем что все символы - цифры
-    for (char c : s) {
-        if (!isdigit(c)) {
-            throw cipher_error("Ключ должен быть положительным числом: " + s);
+    // Сохраняем позиции пробелов
+    vector<int> space_positions;
+    string clean_text;
+    // ИСПРАВЛЕННАЯ СТРОКА 26: используем size_t вместо int
+    for (size_t i = 0; i < text.length(); i++) {
+        if (text[i] == ' ') {
+            space_positions.push_back(i);
+        } else {
+            clean_text += text[i];
         }
     }
     
-    int k = stoi(s);
-    if (k <= 0) {
-        throw cipher_error("Ключ должен быть положительным числом: " + s);
-    }
-    
-    return s;
-}
-
-// Валидация открытого текста
-string RouteCipher::getValidOpenText(const std::string& s) {
-    if (s.empty()) {
-        throw cipher_error("Пустой открытый текст");
-    }
-    
-    string result;
-    bool hasEnglishLetters = false;
-    
-    for (char c : s) {
-        if (isEnglishLetter(c) || c == ' ') {
-            if (isEnglishLetter(c)) {
-                result += toUpperEnglish(c);
-            } else {
-                result += c;
-            }
-            hasEnglishLetters = true;
-        }
-    }
-    
-    if (!hasEnglishLetters) {
-        throw cipher_error("Текст не содержит английских букв");
-    }
-    
-    return result;
-}
-
-// Валидация зашифрованного текста
-string RouteCipher::getValidCipherText(const std::string& s) {
-    if (s.empty()) {
-        throw cipher_error("Пустой зашифрованный текст");
-    }
-    
-    for (char c : s) {
-        if (!isEnglishLetter(c) && c != ' ') {
-            throw cipher_error("Зашифрованный текст содержит недопустимые символы");
-        }
-    }
-    
-    return s;
-}
-
-// Создание таблицы
-vector<vector<char>> RouteCipher::createTable(const std::string& text) {
-    string valid_text = getValidOpenText(text);
-    int length = valid_text.length();
+    int length = clean_text.length();
     int rows = (length + key - 1) / key;
     
+    // Создаем таблицу и заполняем по строкам
     vector<vector<char>> table(rows, vector<char>(key, ' '));
-    
     int index = 0;
+    
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < key; j++) {
             if (index < length) {
-                table[i][j] = valid_text[index++];
+                table[i][j] = clean_text[index++];
             }
         }
     }
     
-    return table;
-}
-
-// Чтение таблицы для шифрования (сверху вниз, справа налево)
-string RouteCipher::readTableEncrypt(const std::vector<std::vector<char>>& table) {
+    // Читаем по столбцам СЛЕВА НАПРАВО
     string result;
-    int rows = table.size();
-    int cols = table[0].size();
-    
-    for (int j = cols - 1; j >= 0; j--) {
+    for (int j = 0; j < key; j++) {
         for (int i = 0; i < rows; i++) {
-            result += table[i][j];
+            if (table[i][j] != ' ') {
+                result += table[i][j];
+            }
         }
     }
     
     return result;
 }
 
-// Чтение таблицы для дешифрования (по строкам слева направо)
-string RouteCipher::readTableDecrypt(const std::vector<std::vector<char>>& table) {
-    string result;
-    int rows = table.size();
-    int cols = table[0].size();
-    
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
-            result += table[i][j];
-        }
+string TableRouteCipher::decrypt(string& text) {
+    if (text.empty()) {
+        throw invalid_argument("Текст не может быть пустым");
     }
     
-    return result;
-}
-
-// Шифрование
-string RouteCipher::encrypt(const std::string& text) {
-    auto table = createTable(text);
-    return readTableEncrypt(table);
-}
-
-// Дешифрование
-string RouteCipher::decrypt(const std::string& text) {
-    string valid_text = getValidCipherText(text);
-    int length = valid_text.length();
+    int length = text.length();
     int rows = (length + key - 1) / key;
     
     vector<vector<char>> table(rows, vector<char>(key, ' '));
     
-    // Заполнение таблицы из зашифрованного текста
-    int index = 0;
-    for (int j = key - 1; j >= 0; j--) {
-        for (int i = 0; i < rows; i++) {
-            if (index < length) {
-                table[i][j] = valid_text[index++];
+    // Определяем количество символов в каждом столбце
+    vector<int> col_counts(key, rows);
+    int total_cells = rows * key;
+    int empty_cells = total_cells - length;
+    
+    // Корректируем для последних столбцов (они могут быть короче)
+    for (int j = key - 1; j >= key - empty_cells; j--) {
+        col_counts[j] = rows - 1;
+    }
+    
+    // Заполняем таблицу по столбцам
+    int text_index = 0;
+    for (int j = 0; j < key; j++) {
+        for (int i = 0; i < col_counts[j]; i++) {
+            if (text_index < length) {
+                table[i][j] = text[text_index++];
             }
         }
     }
     
-    return readTableDecrypt(table);
+    // Читаем по строкам для получения исходного текста
+    string result;
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < key; j++) {
+            if (table[i][j] != ' ') {
+                result += table[i][j];
+            }
+        }
+    }
+    
+    return result;
 }

@@ -1,16 +1,26 @@
+# Компилятор и флаги
 CXX = g++
 CXXFLAGS = -std=c++11 -Wall -Wextra
-TARGET = cipher_program
-SOURCES = main.cpp routeCipher.cpp
-HEADERS = routeCipher.h
+LDFLAGS = -lUnitTest++
 
-$(TARGET): $(SOURCES) $(HEADERS)
-	$(CXX) $(CXXFLAGS) -o $(TARGET) $(SOURCES)
+# Имена файлов
+TARGET = test_routecipher
+SOURCES = test_routeCipher.cpp routeCipher.cpp
 
-run: $(TARGET)
+# Основная цель
+all: $(TARGET)
+
+# Компиляция тестов
+$(TARGET): $(SOURCES)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(SOURCES) $(LDFLAGS)
+
+# Запуск тестов
+test: $(TARGET)
 	./$(TARGET)
 
+# Очистка
 clean:
-	rm -f $(TARGET)
+	rm -f $(TARGET) *.o
 
-.PHONY: run clean
+# Указываем что это phony targets
+.PHONY: all test clean

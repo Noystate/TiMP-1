@@ -21,7 +21,8 @@ private:
     std::map<wchar_t, int> alphaNum;
     std::vector<int> key;
     std::locale loc;
-    
+    void checkWeakKey(const std::wstring& key);
+
     std::wstring getValidKey(const std::wstring& s);
     std::wstring getValidOpenText(const std::wstring& s);
     std::wstring getValidCipherText(const std::wstring& s);
