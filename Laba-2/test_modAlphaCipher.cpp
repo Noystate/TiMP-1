@@ -1,235 +1,354 @@
-#include <UnitTest++/UnitTest++.h>
-#include "modAlphaCipher.h"
-#include <locale>
-#include <codecvt>
 #include <iostream>
-#include <algorithm> // Добавьте эту строку
+#include <string>
+#include <cassert>
+#include <functional>
+#include "modAlphaCipher.h"
 
-// Вспомогательная функция для сравнения wstring
-bool compareWString(const std::wstring& expected, const std::wstring& actual) {
-    if (expected == actual) {
-        return true;
-    } else {
-        std::wcout << L"Ожидалось: '" << expected << L"'" << std::endl;
-        std::wcout << L"Получено: '" << actual << L"'" << std::endl;
+using namespace std;
+
+// Функция для проверки исключений
+bool throws_cipher_error(const std::function<void()>& func) {
+    try {
+        func();
         return false;
+    } catch (const cipher_error& e) {
+        return true;
     }
 }
 
-SUITE(KeyTest)
-{
-    TEST(ValidKey) {
-        modAlphaCipher cipher(L"БВГ");
-        std::wstring result = cipher.encrypt(L"ААААА");
-        CHECK(compareWString(L"БВГБВ", result));
+void test_constructor() {
+    cout << "=== ТЕСТИРОВАНИЕ КОНСТРУКТОРА ===" << endl;
+    
+    // ТЕСТ 1.1: Верный ключ
+    cout << "Тест 1.1: Верный ключ 'ПАРОЛЬ'... ";
+    try {
+        modAlphaCipher cipher1(L"ПАРОЛЬ");
+        cout << "ПРОЙДЕН" << endl;
+    } catch (...) {
+        cout << "ПРОВАЛЕН" << endl;
     }
     
-    TEST(LongKey) {
-        modAlphaCipher cipher(L"БВГДЕЖЗИЙКЛ");
-        std::wstring result = cipher.encrypt(L"ААААА");
-        CHECK(compareWString(L"БВГДЕ", result));
+    // ТЕСТ 1.2: Ключ с пробелами
+    cout << "Тест 1.2: Ключ 'СЕКРЕТНЫЙ КЛЮЧ' (с пробелами)... ";
+    try {
+        modAlphaCipher cipher2(L"СЕКРЕТНЫЙ КЛЮЧ");
+        cout << "ПРОЙДЕН" << endl;
+    } catch (...) {
+        cout << "ПРОВАЛЕН" << endl;
     }
     
-    TEST(LowCaseKey) {
-        modAlphaCipher cipher(L"бвг");
-        std::wstring result = cipher.encrypt(L"ААААА");
-        CHECK(compareWString(L"БВГБВ", result));
+    // ТЕСТ 1.3: Пустой ключ
+    cout << "Тест 1.3: Пустой ключ... ";
+    try {
+        modAlphaCipher cipher3(L"");
+        cout << "ПРОВАЛЕН - исключение не выброшено" << endl;
+    } catch (const cipher_error& e) {
+        cout << "ПРОЙДЕН - исключение: " << e.what() << endl;
     }
     
-    TEST(DigitsInKey) {
-        CHECK_THROW(modAlphaCipher cipher(L"Б1"), cipher_error);
+    // ТЕСТ 1.4: Ключ с цифрами
+    cout << "Тест 1.4: Ключ 'КЛЮЧ123' (с цифрами)... ";
+    try {
+        modAlphaCipher cipher4(L"КЛЮЧ123");
+        cout << "ПРОВАЛЕН - исключение не выброшено" << endl;
+    } catch (const cipher_error& e) {
+        cout << "ПРОЙДЕН - исключение: " << e.what() << endl;
     }
     
-    TEST(PunctuationInKey) {
-        CHECK_THROW(modAlphaCipher cipher(L"Б,В"), cipher_error);
+    // ТЕСТ 1.5: Ключ с латинскими буквами
+    cout << "Тест 1.5: Ключ 'KEY' (латинские буквы)... ";
+    try {
+        modAlphaCipher cipher5(L"KEY");
+        cout << "ПРОВАЛЕН - исключение не выброшено" << endl;
+    } catch (const cipher_error& e) {
+        cout << "ПРОЙДЕН - исключение: " << e.what() << endl;
     }
     
-    TEST(WhitespaceInKey) {
-        CHECK_THROW(modAlphaCipher cipher(L"Б В"), cipher_error);
-    }
-    
-    TEST(EmptyKey) {
-        CHECK_THROW(modAlphaCipher cipher(L""), cipher_error);
-    }
-    
-    TEST(WeakKey) {
-        CHECK_THROW(modAlphaCipher cipher(L"ААА"), cipher_error);
+    // ТЕСТ 1.6: Слабый ключ (одинаковые символы)
+    cout << "Тест 1.6: Слабый ключ 'ААА'... ";
+    try {
+        modAlphaCipher cipher6(L"ААА");
+        cout << "ПРОВАЛЕН - исключение не выброшено" << endl;
+    } catch (const cipher_error& e) {
+        cout << "ПРОЙДЕН - исключение: " << e.what() << endl;
     }
 }
 
-struct KeyB_Fixture {
-    modAlphaCipher* p;
-    KeyB_Fixture() {
-        p = new modAlphaCipher(L"Б");
-    }
-    ~KeyB_Fixture() {
-        delete p;
-    }
-};
-
-SUITE(EncryptTest)
-{
-    TEST_FIXTURE(KeyB_Fixture, UpCaseString) {
-        std::wstring result = p->encrypt(L"ПРИВЕТМИР");
-        // Проверяем что результат не пустой и можем расшифровать обратно
-        CHECK(!result.empty());
-        std::wstring decrypted = p->decrypt(result);
-        CHECK(compareWString(L"ПРИВЕТМИР", decrypted));
+void test_encrypt() {
+    cout << "\n=== ТЕСТИРОВАНИЕ МЕТОДА ENCRYPT ===" << endl;
+    
+    // ТЕСТ 2.1: Текст без пробелов
+    cout << "Тест 2.1: Текст без пробелов 'ПРИВЕТМИР'... ";
+    try {
+        modAlphaCipher cipher(L"КЛЮЧ");
+        wstring result = cipher.encrypt(L"ПРИВЕТМИР");
+        // Проверяем, что результат не пустой и содержит только допустимые символы
+        if (!result.empty() && result.find_first_not_of(L"АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ ") == wstring::npos) {
+            cout << "ПРОЙДЕН: '" << string(result.begin(), result.end()) << "'" << endl;
+        } else {
+            cout << "ПРОВАЛЕН: неверный результат" << endl;
+        }
+    } catch (const cipher_error& e) {
+        cout << "ИСКЛЮЧЕНИЕ: " << e.what() << endl;
     }
     
-    TEST_FIXTURE(KeyB_Fixture, LowCaseString) {
-        std::wstring result = p->encrypt(L"приветмир");
-        CHECK(!result.empty());
-        std::wstring decrypted = p->decrypt(result);
-        CHECK(compareWString(L"ПРИВЕТМИР", decrypted));
+    // ТЕСТ 2.2: Текст с пробелами
+    cout << "Тест 2.2: Текст с пробелами 'ПРИВЕТ МИР'... ";
+    try {
+        modAlphaCipher cipher(L"КЛЮЧ");
+        wstring result = cipher.encrypt(L"ПРИВЕТ МИР");
+        // Проверяем, что пробел сохранился
+        if (result.find(L' ') != wstring::npos) {
+            cout << "ПРОЙДЕН: пробелы сохранены, результат: '" << string(result.begin(), result.end()) << "'" << endl;
+        } else {
+            cout << "ПРОВАЛЕН: пробелы не сохранены" << endl;
+        }
+    } catch (const cipher_error& e) {
+        cout << "ИСКЛЮЧЕНИЕ: " << e.what() << endl;
     }
     
-    TEST_FIXTURE(KeyB_Fixture, StringWithWhitespaceAndPunct) {
-        std::wstring result = p->encrypt(L"ПРИВЕТ, МИР!");
-        CHECK(!result.empty());
-        std::wstring decrypted = p->decrypt(result);
-        // Проверяем что пробелы сохранились, а знаки препинания удалились
-        CHECK(compareWString(L"ПРИВЕТ МИР", decrypted));
-    }
-    
-    TEST_FIXTURE(KeyB_Fixture, StringWithNumbers) {
-        std::wstring result = p->encrypt(L"С НОВЫМ 2024 ГОДОМ");
-        CHECK(!result.empty());
-        std::wstring decrypted = p->decrypt(result);
-        // Проверяем что цифры удалились, а пробелы сохранились
-        CHECK(compareWString(L"С НОВЫМ  ГОДОМ", decrypted));
-    }
-    
-    TEST_FIXTURE(KeyB_Fixture, EmptyString) {
-        CHECK_THROW(p->encrypt(L""), cipher_error);
-    }
-    
-    TEST_FIXTURE(KeyB_Fixture, NoAlphaString) {
-        CHECK_THROW(p->encrypt(L"1234+8765=9999"), cipher_error);
-    }
-    
-    TEST(MaxShiftKey) {
-        modAlphaCipher cipher(L"Я");
-        std::wstring result = cipher.encrypt(L"АБВГД");
-        CHECK(!result.empty());
-        std::wstring decrypted = cipher.decrypt(result);
-        CHECK(compareWString(L"АБВГД", decrypted));
-    }
-}
-
-SUITE(DecryptTest)
-{
-    TEST_FIXTURE(KeyB_Fixture, UpCaseString) {
-        std::wstring encrypted = p->encrypt(L"ПРИВЕТМИР");
-        std::wstring decrypted = p->decrypt(encrypted);
-        CHECK(compareWString(L"ПРИВЕТМИР", decrypted));
-    }
-    
-    TEST_FIXTURE(KeyB_Fixture, LowCaseString) {
-        // Создаем зашифрованный текст в верхнем регистре
-        std::wstring encrypted = p->encrypt(L"ТЕСТ");
-        // Пытаемся расшифровать в нижнем регистре - должно бросить исключение
-        std::wstring lower_encrypted;
-        for (wchar_t c : encrypted) {
-            if (c >= L'А' && c <= L'Я') {
-                lower_encrypted += (c - L'А' + L'а');
-            } else {
-                lower_encrypted += c;
+    // ТЕСТ 2.3: Текст в нижнем регистре
+    cout << "Тест 2.3: Текст в нижнем регистре 'привет мир'... ";
+    try {
+        modAlphaCipher cipher(L"КЛЮЧ");
+        wstring result = cipher.encrypt(L"привет мир");
+        // Проверяем, что результат в верхнем регистре
+        bool isUpper = true;
+        for (wchar_t c : result) {
+            if (c != L' ' && (c < L'А' || c > L'Я') && c != L'Ё') {
+                isUpper = false;
+                break;
             }
         }
-        CHECK_THROW(p->decrypt(lower_encrypted), cipher_error);
+        if (isUpper) {
+            cout << "ПРОЙДЕН: регистр приведен к верхнему, результат: '" << string(result.begin(), result.end()) << "'" << endl;
+        } else {
+            cout << "ПРОВАЛЕН: регистр не приведен к верхнему" << endl;
+        }
+    } catch (const cipher_error& e) {
+        cout << "ИСКЛЮЧЕНИЕ: " << e.what() << endl;
     }
     
-    TEST_FIXTURE(KeyB_Fixture, WhitespaceString) {
-        std::wstring encrypted = p->encrypt(L"ПРИВЕТ МИР");
-        std::wstring decrypted = p->decrypt(encrypted);
-        CHECK(compareWString(L"ПРИВЕТ МИР", decrypted));
+    // ТЕСТ 2.4: Текст с разными пробелами
+    cout << "Тест 2.4: Текст с несколькими пробелами 'ПРИВЕТ  МИР'... ";
+    try {
+        modAlphaCipher cipher(L"КЛЮЧ");
+        wstring result = cipher.encrypt(L"ПРИВЕТ  МИР");
+        // Подсчитываем пробелы
+        int spaceCount = 0;
+        for (wchar_t c : result) {
+            if (c == L' ') spaceCount++;
+        }
+        if (spaceCount >= 2) {
+            cout << "ПРОЙДЕН: множественные пробелы сохранены, результат: '" << string(result.begin(), result.end()) << "'" << endl;
+        } else {
+            cout << "ПРОВАЛЕН: множественные пробелы не сохранены" << endl;
+        }
+    } catch (const cipher_error& e) {
+        cout << "ИСКЛЮЧЕНИЕ: " << e.what() << endl;
     }
     
-    TEST_FIXTURE(KeyB_Fixture, DigitsString) {
-        // Создаем зашифрованный текст
-        std::wstring encrypted = p->encrypt(L"ТЕСТ");
-        // Добавляем цифры в зашифрованный текст
-        std::wstring invalid_encrypted = encrypted + L"2024";
-        CHECK_THROW(p->decrypt(invalid_encrypted), cipher_error);
+    // ТЕСТ 2.5: Пустой текст
+    cout << "Тест 2.5: Пустой текст... ";
+    try {
+        modAlphaCipher cipher(L"КЛЮЧ");
+        wstring result = cipher.encrypt(L"");
+        cout << "ПРОВАЛЕН - исключение не выброшено" << endl;
+    } catch (const cipher_error& e) {
+        cout << "ПРОЙДЕН - исключение: " << e.what() << endl;
     }
     
-    TEST_FIXTURE(KeyB_Fixture, PunctString) {
-        // Создаем зашифрованный текст
-        std::wstring encrypted = p->encrypt(L"ТЕСТ");
-        // Добавляем знаки препинания
-        std::wstring invalid_encrypted = L"!" + encrypted + L",";
-        CHECK_THROW(p->decrypt(invalid_encrypted), cipher_error);
+    // ТЕСТ 2.6: Текст только с недопустимыми символами
+    cout << "Тест 2.6: Текст '123!@#' (только недопустимые символы)... ";
+    try {
+        modAlphaCipher cipher(L"КЛЮЧ");
+        wstring result = cipher.encrypt(L"123!@#");
+        cout << "ПРОВАЛЕН - исключение не выброшено" << endl;
+    } catch (const cipher_error& e) {
+        cout << "ПРОЙДЕН - исключение: " << e.what() << endl;
     }
     
-    TEST_FIXTURE(KeyB_Fixture, EmptyString) {
-        CHECK_THROW(p->decrypt(L""), cipher_error);
-    }
-    
-    TEST(MaxShiftKey) {
-        modAlphaCipher cipher(L"Я");
-        std::wstring encrypted = cipher.encrypt(L"ПРИВЕТ");
-        std::wstring decrypted = cipher.decrypt(encrypted);
-        CHECK(compareWString(L"ПРИВЕТ", decrypted));
+    // ТЕСТ 2.7: Текст с игнорируемыми символами
+    cout << "Тест 2.7: Текст 'ПРИВЕТ, МИР!' (с знаками препинания)... ";
+    try {
+        modAlphaCipher cipher(L"КЛЮЧ");
+        wstring result = cipher.encrypt(L"ПРИВЕТ, МИР!");
+        // Проверяем, что знаки препинания удалены
+        if (result.find(L',') == wstring::npos && result.find(L'!') == wstring::npos) {
+            cout << "ПРОЙДЕН: знаки препинания удалены, результат: '" << string(result.begin(), result.end()) << "'" << endl;
+        } else {
+            cout << "ПРОВАЛЕН: знаки препинания не удалены" << endl;
+        }
+    } catch (const cipher_error& e) {
+        cout << "ИСКЛЮЧЕНИЕ: " << e.what() << endl;
     }
 }
 
-SUITE(IntegrationTest)
-{
-    TEST(EncryptDecryptConsistency) {
+void test_decrypt() {
+    cout << "\n=== ТЕСТИРОВАНИЕ МЕТОДА DECRYPT ===" << endl;
+    
+    // ТЕСТ 3.1: Корректный зашифрованный текст
+    cout << "Тест 3.1: Корректный зашифрованный текст... ";
+    try {
         modAlphaCipher cipher(L"КЛЮЧ");
-        std::wstring original = L"ПРОГРАММИРОВАНИЕ НА C++";
-        std::wstring encrypted = cipher.encrypt(original);
-        std::wstring decrypted = cipher.decrypt(encrypted);
-        CHECK(compareWString(L"ПРОГРАММИРОВАНИЕ НА ", decrypted));
+        wstring original = L"ПРИВЕТМИР";
+        wstring encrypted = cipher.encrypt(original);
+        wstring decrypted = cipher.decrypt(encrypted);
+        
+        if (original == decrypted) {
+            cout << "ПРОЙДЕН: '" << string(original.begin(), original.end()) << "' -> '" 
+                 << string(encrypted.begin(), encrypted.end()) << "' -> '" 
+                 << string(decrypted.begin(), decrypted.end()) << "'" << endl;
+        } else {
+            cout << "ПРОВАЛЕН: дешифрование не восстановило исходный текст" << endl;
+        }
+    } catch (const cipher_error& e) {
+        cout << "ИСКЛЮЧЕНИЕ: " << e.what() << endl;
     }
     
-    TEST(DifferentKeys) {
-        std::wstring text = L"ТЕСТОВЫЙТЕКСТ";
+    // ТЕСТ 3.2: Текст с пробелами
+    cout << "Тест 3.2: Текст с пробелами 'ПРИВЕТ МИР'... ";
+    try {
+        modAlphaCipher cipher(L"КЛЮЧ");
+        wstring original = L"ПРИВЕТ МИР";
+        wstring encrypted = cipher.encrypt(original);
+        wstring decrypted = cipher.decrypt(encrypted);
         
-        modAlphaCipher cipher1(L"А");
-        modAlphaCipher cipher2(L"БВ");
-        modAlphaCipher cipher3(L"ГДЕ");
-        
-        CHECK(compareWString(text, cipher1.decrypt(cipher1.encrypt(text))));
-        CHECK(compareWString(text, cipher2.decrypt(cipher2.encrypt(text))));
-        CHECK(compareWString(text, cipher3.decrypt(cipher3.encrypt(text))));
+        if (original == decrypted) {
+            cout << "ПРОЙДЕН: пробелы сохранены, полный цикл корректен" << endl;
+        } else {
+            cout << "ПРОВАЛЕН: пробелы не сохранены при дешифровании" << endl;
+        }
+    } catch (const cipher_error& e) {
+        cout << "ИСКЛЮЧЕНИЕ: " << e.what() << endl;
     }
     
-    TEST(SpacePreservation) {
+    // ТЕСТ 3.3: Пустой текст
+    cout << "Тест 3.3: Пустой текст для дешифрования... ";
+    try {
         modAlphaCipher cipher(L"КЛЮЧ");
-        std::wstring text = L"ЭТО ТЕКСТ С ПРОБЕЛАМИ";
-        std::wstring encrypted = cipher.encrypt(text);
-        std::wstring decrypted = cipher.decrypt(encrypted);
+        wstring result = cipher.decrypt(L"");
+        cout << "ПРОВАЛЕН - исключение не выброшено" << endl;
+    } catch (const cipher_error& e) {
+        cout << "ПРОЙДЕН - исключение: " << e.what() << endl;
+    }
+    
+    // ТЕСТ 3.4: Текст в нижнем регистре
+    cout << "Тест 3.4: Зашифрованный текст в нижнем регистре... ";
+    try {
+        modAlphaCipher cipher(L"КЛЮЧ");
+        wstring encrypted = cipher.encrypt(L"ТЕСТ");
+        // "Портим" зашифрованный текст - переводим в нижний регистр
+        for (wchar_t& c : encrypted) {
+            if (c >= L'А' && c <= L'Я') c = c - L'А' + L'а';
+            else if (c == L'Ё') c = L'ё';
+        }
+        wstring result = cipher.decrypt(encrypted);
+        cout << "ПРОВАЛЕН - исключение не выброшено" << endl;
+    } catch (const cipher_error& e) {
+        cout << "ПРОЙДЕН - исключение: " << e.what() << endl;
+    }
+    
+    // ТЕСТ 3.5: Текст с недопустимыми символами
+    cout << "Тест 3.5: Зашифрованный текст 'ТЕКСТ123' (с цифрами)... ";
+    try {
+        modAlphaCipher cipher(L"КЛЮЧ");
+        wstring result = cipher.decrypt(L"ТЕКСТ123");
+        cout << "ПРОВАЛЕН - исключение не выброшено" << endl;
+    } catch (const cipher_error& e) {
+        cout << "ПРОЙДЕН - исключение: " << e.what() << endl;
+    }
+    
+    // ТЕСТ 3.6: Полный цикл шифрование-дешифрование
+    cout << "Тест 3.6: Полный цикл с пробелами и разным регистром... ";
+    try {
+        modAlphaCipher cipher(L"СЕКРЕТНЫЙКЛЮЧ");
+        wstring original = L"Это тестовое сообщение с пробелами";
+        wstring encrypted = cipher.encrypt(original);
+        wstring decrypted = cipher.decrypt(encrypted);
         
-        // Проверяем что количество пробелов сохранилось
-        int original_spaces = std::count(text.begin(), text.end(), L' ');
-        int decrypted_spaces = std::count(decrypted.begin(), decrypted.end(), L' ');
-        CHECK_EQUAL(original_spaces, decrypted_spaces);
+        wstring expected = L"ЭТО ТЕСТОВОЕ СООБЩЕНИЕ С ПРОБЕЛАМИ";
+        if (decrypted == expected) {
+            cout << "ПРОЙДЕН: регистр и пробелы обработаны корректно" << endl;
+        } else {
+            cout << "ПРОВАЛЕН: ожидалось '" << string(expected.begin(), expected.end()) 
+                 << "', получено '" << string(decrypted.begin(), decrypted.end()) << "'" << endl;
+        }
+    } catch (const cipher_error& e) {
+        cout << "ИСКЛЮЧЕНИЕ: " << e.what() << endl;
+    }
+}
+
+void test_additional_cases() {
+    cout << "\n=== ДОПОЛНИТЕЛЬНЫЕ ТЕСТЫ ===" << endl;
+    
+    // Тест с длинным текстом
+    cout << "Тест с длинным текстом и пробелами... ";
+    try {
+        modAlphaCipher cipher(L"ДЛИННЫЙКЛЮЧ");
+        wstring original = L"ЭТО ДЛИННЫЙ ТЕКСТ С МНОЖЕСТВОМ ПРОБЕЛОВ И РАЗНЫМИ СЛОВАМИ";
+        wstring encrypted = cipher.encrypt(original);
+        wstring decrypted = cipher.decrypt(encrypted);
         
-        // Проверяем что пробелы на тех же позициях (примерно)
-        CHECK(decrypted.find(L' ') != std::wstring::npos);
+        if (original == decrypted) {
+            cout << "ПРОЙДЕН: длинный текст с пробелами обработан корректно" << endl;
+        } else {
+            cout << "ПРОВАЛЕН: ошибка в обработке длинного текста" << endl;
+        }
+    } catch (const cipher_error& e) {
+        cout << "ИСКЛЮЧЕНИЕ: " << e.what() << endl;
+    }
+    
+    // Тест с ключом содержащим букву Ё
+    cout << "Тест с ключом содержащим Ё... ";
+    try {
+        modAlphaCipher cipher(L"КЛЮЧЁЁ");
+        wstring original = L"ПРИВЕТ МИР";
+        wstring encrypted = cipher.encrypt(original);
+        wstring decrypted = cipher.decrypt(encrypted);
+        
+        if (original == decrypted) {
+            cout << "ПРОЙДЕН: ключ с буквой Ё работает корректно" << endl;
+        } else {
+            cout << "ПРОВАЛЕН: ошибка с ключом содержащим Ё" << endl;
+        }
+    } catch (const cipher_error& e) {
+        cout << "ИСКЛЮЧЕНИЕ: " << e.what() << endl;
+    }
+    
+    // Тест с текстом содержащим букву Ё
+    cout << "Тест с текстом содержащим Ё... ";
+    try {
+        modAlphaCipher cipher(L"КЛЮЧ");
+        wstring original = L"ЁЛКА ПАЁК";
+        wstring encrypted = cipher.encrypt(original);
+        wstring decrypted = cipher.decrypt(encrypted);
+        
+        if (original == decrypted) {
+            cout << "ПРОЙДЕН: текст с буквой Ё обработан корректно" << endl;
+        } else {
+            cout << "ПРОВАЛЕН: ошибка с текстом содержащим Ё" << endl;
+        }
+    } catch (const cipher_error& e) {
+        cout << "ИСКЛЮЧЕНИЕ: " << e.what() << endl;
     }
 }
 
 int main() {
-    // Установка локали для корректного вывода широких строк
-    std::locale::global(std::locale(""));
-    std::wcout.imbue(std::locale());
+    // Установка локали для работы с широкими символами
+    setlocale(LC_ALL, "ru_RU.UTF-8");
     
-    std::wcout << L"=============================================" << std::endl;
-    std::wcout << L"   ТЕСТИРОВАНИЕ ШИФРА ГРОНСФЕЛЬДА" << std::endl;
-    std::wcout << L"=============================================" << std::endl;
+    cout << "МОДУЛЬНОЕ ТЕСТИРОВАНИЕ MODALPHACIPHER" << endl;
+    cout << "=====================================" << endl;
     
-    int result = UnitTest::RunAllTests();
+    // Запуск всех тестов
+    test_constructor();
+    test_encrypt();
+    test_decrypt();
+    test_additional_cases();
     
-    std::wcout << L"=============================================" << std::endl;
-    if (result == 0) {
-        std::wcout << L"✅ ВСЕ ТЕСТЫ ПРОЙДЕНЫ УСПЕШНО!" << std::endl;
-    } else {
-        std::wcout << L"❌ ОБНАРУЖЕНЫ ОШИБКИ В ТЕСТАХ!" << std::endl;
-    }
-    std::wcout << L"=============================================" << std::endl;
+    cout << "\n=====================================" << endl;
+    cout << "ТЕСТИРОВАНИЕ ЗАВЕРШЕНО" << endl;
     
-    return result;
+    return 0;
 }

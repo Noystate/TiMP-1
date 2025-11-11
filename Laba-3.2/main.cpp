@@ -1,188 +1,136 @@
 #include <iostream>
 #include <string>
-#include <locale>
-#include "routeCipher.h"
+#include <limits>
+#include "routecipher.h"
 
 using namespace std;
 
-// Установка локали для русского вывода меню
-void setRussianLocale() {
-    setlocale(LC_ALL, "");
+bool isValidKey(int k) {
+    if (k <= 0) {
+        cout << "Ошибка: Ключ должен быть положительным числом!\n";
+        return false;
+    }
+    return true;
 }
 
-// Отображение меню на русском
-void showMenu() {
-    cout << "\n=== TABLE ROUTE TRANSPOSITION CIPHER ===" << endl;
-    cout << "=== ШИФР ТАБЛИЧНОЙ МАРШРУТНОЙ ПЕРЕСТАНОВКИ ===" << endl;
-    cout << "1. Зашифровать текст" << endl;
-    cout << "2. Расшифровать текст" << endl;
-    cout << "3. Показать примеры" << endl;
-    cout << "4. Сменить ключ" << endl;
-    cout << "0. Выход" << endl;
-    cout << "Выберите действие: ";
+bool isValidText(const string &text) {
+    if (text.empty()) {
+        cout << "Ошибка: Текст не может быть пустым!\n";
+        return false;
+    }
+    return true;
 }
 
-// Функция для демонстрации примеров
-void showExamples(RouteCipher& cipher) {
-    cout << "\n--- WORK EXAMPLES ---" << endl;
-    cout << "--- ПРИМЕРЫ РАБОТЫ ---" << endl;
-    
-    // Пример 1
-    cout << "Пример 1: 'HELLO'" << endl;
-    try {
-        string encrypted1 = cipher.encrypt("HELLO");
-        string decrypted1 = cipher.decrypt(encrypted1);
-        cout << "Зашифровано: " << encrypted1 << endl;
-        cout << "Расшифровано: " << decrypted1 << endl;
-        cout << "✔ Корректность: " << ("HELLO" == decrypted1 ? "ДА" : "НЕТ") << endl;
-    } catch (const exception& e) {
-        cout << "❌ Ошибка: " << e.what() << endl;
-    }
-    
-    // Пример 2
-    cout << "\nПример 2: 'HELLO WORLD'" << endl;
-    try {
-        string encrypted2 = cipher.encrypt("HELLO WORLD");
-        string decrypted2 = cipher.decrypt(encrypted2);
-        cout << "Зашифровано: " << encrypted2 << endl;
-        cout << "Расшифровано: " << decrypted2 << endl;
-        cout << "✔ Корректность: " << ("HELLO WORLD" == decrypted2 ? "ДА" : "НЕТ") << endl;
-    } catch (const exception& e) {
-        cout << "❌ Ошибка: " << e.what() << endl;
-    }
-    
-    // Пример 3 - тест ошибки с пустым текстом
-    cout << "\nПример 3: Тест ошибки - пустой текст" << endl;
-    try {
-        string encrypted3 = cipher.encrypt("");
-        cout << "Зашифровано: " << encrypted3 << endl;
-    } catch (const exception& e) {
-        cout << "❌ Ошибка: " << e.what() << endl;
-    }
-    
-    // Пример 4 - тест ошибки с недопустимыми символами
-    cout << "\nПример 4: Тест ошибки - недопустимые символы" << endl;
-    try {
-        string encrypted4 = cipher.encrypt("HELLO123");
-        cout << "Зашифровано: " << encrypted4 << endl;
-    } catch (const exception& e) {
-        cout << "❌ Ошибка: " << e.what() << endl;
-    }
+void clearInputBuffer() {
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+}
+
+void printHeader() {
+    cout << "=== ШИФР ТАБЛИЧНОЙ МАРШРУТНОЙ ПЕРЕСТАНОВКИ ===\n";
 }
 
 int main() {
-    setRussianLocale();
+    int key;
+    unsigned choice;
     
-    cout << "=== TABLE ROUTE TRANSPOSITION CIPHER ===" << endl;
-    cout << "=== ШИФР ТАБЛИЧНОЙ МАРШРУТНОЙ ПЕРЕСТАНОВКИ ===" << endl;
-    cout << "• English language only • Spaces supported" << endl;
-    cout << "• Только английский язык • Поддержка пробелов" << endl;
-    cout << "• Write route: left to right, top to bottom" << endl;
-    cout << "• Read route: top to bottom, right to left" << endl;
-    cout << "• Маршрут записи: слева направо, сверху вниз" << endl;
-    cout << "• Маршрут считывания: сверху вниз, справа налево" << endl;
+    printHeader();
+    cout << "Введите начальный ключ (количество столбцов): ";
+    cin >> key;
     
-    // Создаем шифратор с ключом по умолчанию
-    RouteCipher cipher("3");
-    cout << "Ключ по умолчанию: 3 столбца" << endl;
-    cout << "Default key: 3 columns" << endl;
+    if (!isValidKey(key)) {
+        return 1;
+    }
     
-    int choice;
-    string input;
+    RouteCipher cipher(key);
+    
+    cout << "\nШифр успешно инициализирован!\n";
+    cout << "Текущий ключ: " << cipher.getKey() << endl;
+    cout << "Используйте меню для работы с программой.\n\n";
     
     do {
-        showMenu();
+        printHeader();
+        cout << "1. Зашифровать текст\n";
+        cout << "2. Расшифровать текст\n";
+        cout << "3. Изменить ключ (количество столбцов)\n";
+        cout << "0. Выход\n";
+        cout << "Выберите операцию: ";
         cin >> choice;
-        cin.ignore();
+        
+        if (choice == 0) {
+            break;
+        }
         
         switch (choice) {
             case 1: {
-                cout << "\n--- ENCRYPTION ---" << endl;
-                cout << "--- ШИФРОВАНИЕ ---" << endl;
-                cout << "Текущий ключ: " << cipher.getKey() << " столбцов" << endl;
-                cout << "Current key: " << cipher.getKey() << " columns" << endl;
-                cout << "Введите текст: ";
-                getline(cin, input);
+                string text;
+                cout << "Введите текст для шифрования: ";
+                clearInputBuffer();
+                getline(cin, text);
+                
+                if (!isValidText(text)) {
+                    break;
+                }
                 
                 try {
-                    string encrypted = cipher.encrypt(input);
-                    cout << "✅ Зашифрованный текст: " << encrypted << endl;
-                    cout << "✅ Encrypted text: " << encrypted << endl;
+                    string encrypted = cipher.encrypt(text);
+                    
+                    cout << "\n--- Результат шифрования ---\n";
+                    cout << "Исходный текст: " << text << endl;
+                    cout << "Зашифрованный текст: " << encrypted << endl;
+                    cout << "\nНажмите Enter для продолжения...";
+                    clearInputBuffer();
                 } catch (const exception& e) {
-                    cout << "❌ Ошибка шифрования: " << e.what() << endl;
-                    cout << "❌ Encryption error: " << e.what() << endl;
-                    cout << "Подсказка: используйте только английские буквы и пробелы" << endl;
-                    cout << "Hint: use only English letters and spaces" << endl;
+                    cout << "Ошибка: " << e.what() << endl;
                 }
                 break;
             }
             
             case 2: {
-                cout << "\n--- DECRYPTION ---" << endl;
-                cout << "--- ДЕШИФРОВАНИЕ ---" << endl;
-                cout << "Текущий ключ: " << cipher.getKey() << " столбцов" << endl;
-                cout << "Current key: " << cipher.getKey() << " columns" << endl;
-                cout << "Введите текст: ";
-                getline(cin, input);
+                string text;
+                cout << "Введите текст для расшифрования: ";
+                clearInputBuffer();
+                getline(cin, text);
+                
+                if (!isValidText(text)) {
+                    break;
+                }
                 
                 try {
-                    string decrypted = cipher.decrypt(input);
-                    cout << "✅ Расшифрованный текст: " << decrypted << endl;
-                    cout << "✅ Decrypted text: " << decrypted << endl;
+                    string decrypted = cipher.decrypt(text);
+                    
+                    cout << "\n--- Результат расшифрования ---\n";
+                    cout << "Зашифрованный текст: " << text << endl;
+                    cout << "Расшифрованный текст: " << decrypted << endl;
+                    cout << "\nНажмите Enter для продолжения...";
+                    clearInputBuffer();
                 } catch (const exception& e) {
-                    cout << "❌ Ошибка дешифрования: " << e.what() << endl;
-                    cout << "❌ Decryption error: " << e.what() << endl;
+                    cout << "Ошибка: " << e.what() << endl;
                 }
                 break;
             }
             
             case 3: {
-                showExamples(cipher);
-                break;
-            }
-            
-            case 4: {
-                cout << "\n--- CHANGE KEY ---" << endl;
-                cout << "--- СМЕНА КЛЮЧА ---" << endl;
-                cout << "Текущий ключ: " << cipher.getKey() << " столбцов" << endl;
-                cout << "Current key: " << cipher.getKey() << " columns" << endl;
-                cout << "Введите новый ключ: ";
-                string newKeyStr;
-                getline(cin, newKeyStr);
+                int newKey;
+                cout << "Введите новый ключ (количество столбцов): ";
+                cin >> newKey;
                 
-                try {
-                    // Создаем временный шифратор для валидации ключа
-                    RouteCipher tempCipher(newKeyStr);
-                    cipher.setKey(tempCipher.getKey());
-                    cout << "✅ Новый ключ установлен: " << cipher.getKey() << " столбцов" << endl;
-                    cout << "✅ New key set: " << cipher.getKey() << " columns" << endl;
-                } catch (const exception& e) {
-                    cout << "❌ Ошибка: " << e.what() << endl;
-                    cout << "❌ Error: " << e.what() << endl;
+                if (isValidKey(newKey)) {
+                    cipher.setKey(newKey);
+                    cout << "Ключ успешно изменен на: " << newKey << endl;
                 }
                 break;
             }
             
-            case 0: {
-                cout << "\nВыход из программы..." << endl;
-                cout << "Exiting program..." << endl;
+            default:
+                cout << "Неверная операция!\n";
                 break;
-            }
-            
-            default: {
-                cout << "❌ Неверный выбор!" << endl;
-                cout << "❌ Invalid choice!" << endl;
-                break;
-            }
         }
         
-        if (choice != 0) {
-            cout << "\nНажмите Enter для продолжения..." << endl;
-            cout << "Press Enter to continue..." << endl;
-            cin.get();
-        }
+        cout << endl;
         
     } while (choice != 0);
     
+    cout << "Выход из программы.\n";
     return 0;
 }

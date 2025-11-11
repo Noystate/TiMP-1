@@ -1,44 +1,70 @@
 # Компилятор и флаги
 CXX = g++
 CXXFLAGS = -std=c++11 -Wall -Wextra -pedantic
-LDFLAGS = -lUnitTest++
+DEBUG_FLAGS = -g
+RELEASE_FLAGS = -O2
+
+# Цели
+TARGET = route_cipher
+TEST_TARGET = test_routecipher
 
 # Исходные файлы
-SOURCES = routeCipher.cpp test_routeCipher.cpp
-OBJECTS = $(SOURCES:.cpp=.o)
+MAIN_SRCS = main.cpp routecipher.cpp
+TEST_SRCS = test_routecipher.cpp routecipher.cpp
 
-# Исполняемые файлы
-TEST_EXEC = test_routecipher
-MAIN_EXEC = main
+# Объектные файлы
+MAIN_OBJS = $(MAIN_SRCS:.cpp=.o)
+TEST_OBJS = $(TEST_SRCS:.cpp=.o)
 
-# Цели по умолчанию
-all: $(TEST_EXEC) $(MAIN_EXEC)
-
-# Сборка тестов
-$(TEST_EXEC): test_routeCipher.o routeCipher.o
-	$(CXX) -o $@ $^ $(LDFLAGS)
+# Правило по умолчанию
+all: $(TARGET)
 
 # Сборка основной программы
-$(MAIN_EXEC): main.o routeCipher.o
-	$(CXX) -o $@ $^
+$(TARGET): $(MAIN_OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
-# Правило для объектных файлов
+# Сборка тестовой программы
+$(TEST_TARGET): $(TEST_OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+# Компиляция .cpp файлов в .o файлы
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Запуск тестов
-test: $(TEST_EXEC)
-	./$(TEST_EXEC)
+test: $(TEST_TARGET)
+	./$(TEST_TARGET)
 
-# Запуск основной программы
-run: $(MAIN_EXEC)
-	./$(MAIN_EXEC)
+# Отладочная сборка
+debug: CXXFLAGS += $(DEBUG_FLAGS)
+debug: $(TARGET) $(TEST_TARGET)
+
+# Релизная сборка
+release: CXXFLAGS += $(RELEASE_FLAGS)
+release: $(TARGET)
 
 # Очистка
 clean:
-	rm -f *.o $(TEST_EXEC) $(MAIN_EXEC)
+	rm -f $(TARGET) $(TEST_TARGET) *.o
 
-# Пересборка
-rebuild: clean all
+# Установка (копирование в /usr/local/bin)
+install: $(TARGET)
+	cp $(TARGET) /usr/local/bin/
 
-.PHONY: all test run clean rebuild
+# Помощь
+help:
+	@echo "Доступные цели:"
+	@echo "  all      - сборка основной программы (по умолчанию)"
+	@echo "  test     - сборка и запуск тестов"
+	@echo "  debug    - отладочная сборка"
+	@echo "  release  - релизная сборка"
+	@echo "  clean    - очистка сборочных файлов"
+	@echo "  install  - установка программы"
+	@echo "  help     - эта справка"
+
+# Файлы заголовков для зависимостей
+main.o: routecipher.h
+routecipher.o: routecipher.h
+test_routecipher.o: routecipher.h
+
+.PHONY: all test debug release clean install help
