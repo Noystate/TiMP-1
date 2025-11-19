@@ -1,0 +1,104 @@
+\hypertarget{classmodAlphaCipher}{}\doxysection{Класс mod\+Alpha\+Cipher}
+\label{classmodAlphaCipher}\index{modAlphaCipher@{modAlphaCipher}}
+
+
+Шифрование методом Гронсфельда  
+
+
+
+
+{\ttfamily \#include $<$mod\+Alpha\+Cipher.\+h$>$}
+
+\doxysubsection*{Открытые члены}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classmodAlphaCipher_a4f0a86c20f5d836f66cb1e640d875e6b}\label{classmodAlphaCipher_a4f0a86c20f5d836f66cb1e640d875e6b}} 
+{\bfseries mod\+Alpha\+Cipher} ()=delete
+\begin{DoxyCompactList}\small\item\em удаленный конструктор без параметров \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classmodAlphaCipher_a76a420025b3c08f72c9b996d83c6ff09}{mod\+Alpha\+Cipher}} (const std\+::string \&skey)
+\begin{DoxyCompactList}\small\item\em Конструктор для установки ключа \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{classmodAlphaCipher_ab855d6b2ba63a70d84abc8b15700da63}{encrypt}} (const std\+::string \&open\+\_\+text)
+\begin{DoxyCompactList}\small\item\em Зашифровывание открытого текста \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{classmodAlphaCipher_af1f0fa8ec93df56aa7657494de2a3f00}{decrypt}} (const std\+::string \&cipher\+\_\+text)
+\begin{DoxyCompactList}\small\item\em Расшифровывание зашифрованного текста \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Подробное описание}
+Шифрование методом Гронсфельда 
+
+Ключ устанавливается в конструкторе. Для зашифровывания и расшифровывания предназначены методы encrypt и decrypt. \begin{DoxyWarning}{Предупреждения}
+Реализация только для английского языка 
+\end{DoxyWarning}
+
+
+\doxysubsection{Конструктор(ы)}
+\mbox{\Hypertarget{classmodAlphaCipher_a76a420025b3c08f72c9b996d83c6ff09}\label{classmodAlphaCipher_a76a420025b3c08f72c9b996d83c6ff09}} 
+\index{modAlphaCipher@{modAlphaCipher}!modAlphaCipher@{modAlphaCipher}}
+\index{modAlphaCipher@{modAlphaCipher}!modAlphaCipher@{modAlphaCipher}}
+\doxysubsubsection{\texorpdfstring{modAlphaCipher()}{modAlphaCipher()}}
+{\footnotesize\ttfamily mod\+Alpha\+Cipher\+::mod\+Alpha\+Cipher (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{skey }\end{DoxyParamCaption})}
+
+
+
+Конструктор для установки ключа 
+
+
+\begin{DoxyParams}[1]{Аргументы}
+\mbox{\texttt{ in}}  & {\em skey} & Ключ шифрования в виде строки \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Методы}
+\mbox{\Hypertarget{classmodAlphaCipher_af1f0fa8ec93df56aa7657494de2a3f00}\label{classmodAlphaCipher_af1f0fa8ec93df56aa7657494de2a3f00}} 
+\index{modAlphaCipher@{modAlphaCipher}!decrypt@{decrypt}}
+\index{decrypt@{decrypt}!modAlphaCipher@{modAlphaCipher}}
+\doxysubsubsection{\texorpdfstring{decrypt()}{decrypt()}}
+{\footnotesize\ttfamily std\+::string mod\+Alpha\+Cipher\+::decrypt (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{cipher\+\_\+text }\end{DoxyParamCaption})}
+
+
+
+Расшифровывание зашифрованного текста 
+
+
+\begin{DoxyParams}[1]{Аргументы}
+\mbox{\texttt{ in}}  & {\em cipher\+\_\+text} & Зашифрованный текст. Не должен быть пустой строкой. Должен содержать только прописные буквы английского алфавита. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Возвращает}
+Расшифрованная строка 
+\end{DoxyReturn}
+
+\begin{DoxyExceptions}{Исключения}
+{\em \mbox{\hyperlink{classcipher__error}{cipher\+\_\+error}}} & если текст пустой или содержит недопустимые символы \\
+\hline
+\end{DoxyExceptions}
+\mbox{\Hypertarget{classmodAlphaCipher_ab855d6b2ba63a70d84abc8b15700da63}\label{classmodAlphaCipher_ab855d6b2ba63a70d84abc8b15700da63}} 
+\index{modAlphaCipher@{modAlphaCipher}!encrypt@{encrypt}}
+\index{encrypt@{encrypt}!modAlphaCipher@{modAlphaCipher}}
+\doxysubsubsection{\texorpdfstring{encrypt()}{encrypt()}}
+{\footnotesize\ttfamily std\+::string mod\+Alpha\+Cipher\+::encrypt (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{open\+\_\+text }\end{DoxyParamCaption})}
+
+
+
+Зашифровывание открытого текста 
+
+
+\begin{DoxyParams}[1]{Аргументы}
+\mbox{\texttt{ in}}  & {\em open\+\_\+text} & Открытый текст. Не должен быть пустой строкой. Строчные символы автоматически преобразуются к прописным. Все не-\/буквы удаляются. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Возвращает}
+Зашифрованная строка 
+\end{DoxyReturn}
+
+\begin{DoxyExceptions}{Исключения}
+{\em \mbox{\hyperlink{classcipher__error}{cipher\+\_\+error}}} & если текст пустой \\
+\hline
+\end{DoxyExceptions}
+
+
+Объявления и описания членов классов находятся в файлах\+:\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{modAlphaCipher_8h}{mod\+Alpha\+Cipher.\+h}}\item 
+\mbox{\hyperlink{modAlphaCipher_8cpp}{mod\+Alpha\+Cipher.\+cpp}}\end{DoxyCompactItemize}

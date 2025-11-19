@@ -1,0 +1,26 @@
+\hypertarget{routecipher_8h_source}{}\doxysection{routecipher.\+h}
+\mbox{\hyperlink{routecipher_8h}{См. документацию.}}
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1 }
+\DoxyCodeLine{10 \textcolor{preprocessor}{\#pragma once}}
+\DoxyCodeLine{11 \textcolor{preprocessor}{\#include <string>}}
+\DoxyCodeLine{12 \textcolor{preprocessor}{\#include <vector>}}
+\DoxyCodeLine{13 }
+\DoxyCodeLine{20 \textcolor{keyword}{class }\mbox{\hyperlink{classRouteCipher}{RouteCipher}} \{}
+\DoxyCodeLine{21 \textcolor{keyword}{private}:}
+\DoxyCodeLine{22     \textcolor{keywordtype}{int} key; }
+\DoxyCodeLine{23 \textcolor{keyword}{public}:}
+\DoxyCodeLine{24     \mbox{\hyperlink{classRouteCipher_a72db9f8e6ec440800a9eec4ed53fa5d5}{RouteCipher}}() = \textcolor{keyword}{delete}; }
+\DoxyCodeLine{25     }
+\DoxyCodeLine{31     \mbox{\hyperlink{classRouteCipher_a72db9f8e6ec440800a9eec4ed53fa5d5}{RouteCipher}}(\textcolor{keywordtype}{int} skey);}
+\DoxyCodeLine{32     }
+\DoxyCodeLine{41     std::string \mbox{\hyperlink{classRouteCipher_a74e11ff4177838381d37bbcd4e80c8c3}{encrypt}}(\textcolor{keyword}{const} std::string\& text);}
+\DoxyCodeLine{42     }
+\DoxyCodeLine{51     std::string \mbox{\hyperlink{classRouteCipher_ae72d0cd460cc603151e07c9b89ceda4a}{decrypt}}(\textcolor{keyword}{const} std::string\& text);}
+\DoxyCodeLine{52     }
+\DoxyCodeLine{57     \textcolor{keywordtype}{int} \mbox{\hyperlink{classRouteCipher_ab6acf5c31014ff599197d57f8c22e601}{getKey}}()\textcolor{keyword}{ const }\{ \textcolor{keywordflow}{return} key; \}}
+\DoxyCodeLine{58     }
+\DoxyCodeLine{64     \textcolor{keywordtype}{void} \mbox{\hyperlink{classRouteCipher_a93c0e88c9fa358c8811240241648c855}{setKey}}(\textcolor{keywordtype}{int} newKey) \{ key = newKey; \}}
+\DoxyCodeLine{65 \};}
+
+\end{DoxyCode}

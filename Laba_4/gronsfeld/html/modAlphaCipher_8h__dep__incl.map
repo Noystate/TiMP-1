@@ -1,0 +1,5 @@
+<map id="modAlphaCipher.h" name="modAlphaCipher.h">
+<area shape="rect" id="node1" title="Заголовочный файл для модуля Gronsfeld." alt="" coords="98,5,239,32"/>
+<area shape="rect" id="node2" href="$main__gronsfeld_8cpp.html" title="Главный модуль программы для работы с шифром Гронсфельда" alt="" coords="5,80,156,107"/>
+<area shape="rect" id="node3" href="$modAlphaCipher_8cpp.html" title="Реализация методов класса modAlphaCipher." alt="" coords="180,80,336,107"/>
+</map>
